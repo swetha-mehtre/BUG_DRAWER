@@ -1,0 +1,392 @@
+/* ============================================
+   PROFESSIONAL TECH THEME - MODERN BOLD DESIGN
+   ============================================ */
+
+:root {
+    --background: #fafbfc;
+    --background-solid: #fafbfc;
+    --surface: #ffffff;
+    --surface-hover: #f5f7fa;
+    --surface-dark: #eef2f7;
+    --surface-glass: #ffffff;
+    --surface-glass-hover: #f5f7fa;
+    --border: #d0d7e0;
+    --border-light: #e1e8f0;
+    
+    --text-primary: #0a0e27;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+    --text-inverse: #ffffff;
+    
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+    --shadow-glow: none;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    --accent: #1677ff;
+    --accent-dark: #0c5cdc;
+    --accent-light: #69b1ff;
+}
+
+/* Light theme specific styles */
+body {
+    background: var(--background);
+}
+
+.navbar {
+    background: #ffffff !important;
+    border-bottom: 2px solid #1677ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.page-header h1 {
+    color: #0a0e27;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 2.5rem;
+}
+
+.page-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Light theme stat cards - BOLD MODERN */
+.stat-card {
+    background: linear-gradient(135deg, #1677ff 0%, #1677ff 100%);
+    border: 3px solid #1677ff;
+    box-shadow: 0 4px 12px rgba(22, 119, 255, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+    background: linear-gradient(135deg, #0c5cdc 0%, #0c5cdc 100%);
+    border-color: #0c5cdc;
+    box-shadow: 0 8px 24px rgba(12, 92, 220, 0.25);
+    transform: translateY(-6px) scale(1.02);
+}
+
+.stat-icon {
+    background: #ffffff;
+    color: #1677ff;
+    font-weight: 800;
+    box-shadow: none;
+}
+
+.stat-number {
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 2.2rem;
+}
+
+.stat-label {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Light theme detail sections - modern bold */
+.detail-section {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    border-left: 5px solid #1677ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.detail-section:hover {
+    border-left-color: #0c5cdc;
+    background: #fafbfc;
+    box-shadow: 0 4px 16px rgba(22, 119, 255, 0.12);
+    border-color: #1677ff;
+}
+
+.detail-section h3 {
+    color: #1677ff;
+    font-weight: 800;
+}
+
+.detail-section p {
+    color: var(--text-secondary);
+}
+
+/* Light theme tables - bold modern */
+.bug-table {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 6px !important;
+    overflow: hidden !important;
+}
+
+.bug-table thead {
+    background: #1677ff;
+    border-bottom: none;
+}
+
+.bug-table th {
+    padding: 1rem 0.75rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.bug-table tbody tr {
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f7;
+    transition: all 0.3s ease;
+}
+
+.bug-table tbody tr:hover {
+    background: #fafbfc;
+    box-shadow: inset 4px 0 0 #1677ff, 0 2px 8px rgba(22, 119, 255, 0.1);
+}
+
+.bug-table td {
+    padding: 0.75rem !important;
+    color: var(--text-primary);
+}
+
+/* Light theme badges - bold tech colors */
+.badge {
+    box-shadow: none;
+    font-weight: 800 !important;
+    border-radius: 4px !important;
+    padding: 0.4rem 0.8rem !important;
+}
+
+.badge-high {
+    background: #ff4d4f;
+    color: #ffffff;
+}
+
+.badge-medium {
+    background: #faad14;
+    color: #ffffff;
+}
+
+.badge-low {
+    background: #52c41a;
+    color: #ffffff;
+}
+
+.badge-status-open {
+    background: #1677ff;
+    color: #ffffff;
+}
+
+.badge-status-in-progress {
+    background: #faad14;
+    color: #ffffff;
+}
+
+.badge-status-fixed {
+    background: #52c41a;
+    color: #ffffff;
+}
+
+.badge-status-closed {
+    background: #8c8c8c;
+    color: #ffffff;
+}
+
+/* Light theme comments - bold tech */
+.comment {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    border-left: 5px solid #1677ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.comment:hover {
+    border-left-color: #0c5cdc;
+    background: #fafbfc;
+    box-shadow: 0 4px 12px rgba(22, 119, 255, 0.15);
+}
+
+.comment-date {
+    background: #1677ff;
+    color: white;
+    padding: 0.4rem 0.9rem !important;
+    border-radius: 4px !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+}
+
+.comment-body {
+    color: var(--text-secondary);
+}
+
+/* Light theme buttons - bold modern */
+.btn-primary {
+    background: #1677ff;
+    color: white;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 4px;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #0c5cdc;
+    box-shadow: 0 6px 16px rgba(22, 119, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid #1677ff;
+    font-weight: 700;
+}
+
+.btn-secondary:hover {
+    background: #1677ff;
+    color: white;
+    border-color: #1677ff;
+}
+
+/* Light theme notification panel */
+.notification-panel {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 6px !important;
+}
+
+.notification-card {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-radius: 6px !important;
+    transition: all 0.3s ease;
+}
+
+.notification-card:hover {
+    background: #fafbfc;
+    border-color: #1677ff;
+    box-shadow: 0 4px 12px rgba(22, 119, 255, 0.15);
+}
+
+.notification-icon {
+    background: #1677ff;
+    color: white;
+}
+
+/* Light theme assignment section */
+.assignment-section {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 6px !important;
+}
+
+.assignment-section h3 {
+    color: #1677ff;
+    font-weight: 800;
+}
+
+/* Light theme forms */
+.form-control,
+select,
+textarea {
+    background: #ffffff !important;
+    border: 2px solid #d0d7e0 !important;
+    color: var(--text-primary) !important;
+    border-radius: 4px !important;
+    font-weight: 500;
+}
+
+.form-control:focus,
+select:focus,
+textarea:focus {
+    border-color: #1677ff !important;
+    box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1) !important;
+}
+
+/* Light theme filter section */
+.filter-section {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 6px !important;
+}
+
+/* Light theme table container */
+.table-container {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 6px !important;
+}
+
+/* Light theme info cards */
+.info-card {
+    background: #ffffff;
+    border: 2px solid #d0d7e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 6px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.info-card:hover {
+    background: #fafbfc;
+    border-color: #1677ff;
+    box-shadow: 0 4px 16px rgba(22, 119, 255, 0.15);
+    transform: translateY(-4px);
+}
+
+.utility-card {
+    background: #f0f7ff !important;
+}
+
+.info-chip {
+    background: #e6f7ff;
+    color: #1677ff;
+    border: 2px solid #1677ff;
+    font-weight: 700;
+}
+
+.info-label {
+    color: var(--text-muted);
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+
+.info-score {
+    color: #1677ff !important;
+    font-weight: 900;
+}
+
+.info-key {
+    color: #1677ff !important;
+    font-weight: 800;
+}
+
+/* Light theme links */
+a {
+    color: #1677ff;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+a:hover {
+    color: #0c5cdc;
+    text-decoration: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .bug-table {
+        font-size: 0.9rem;
+    }
+    
+    .detail-section {
+        padding: 1.5rem !important;
+    }
+    
+    .comment {
+        padding: 1.2rem !important;
+    }
+}

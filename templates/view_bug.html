@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug #{{ bug.id }} - Bug Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/light-theme-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme-enhanced.css') }}">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>� Bug Tracker</h2>
+            </div>
+            <div class="nav-items">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text">Dark</span>
+                </button>
+                <span class="user-info">{{ session.user_email }} ({{ session.user_role|title }})</span>                <a href="{{ url_for('profile') }}" class="btn btn-secondary">👤 Profile</a>                {% if session.user_role == 'admin' %}
+                <a href="{{ url_for('view_users') }}" class="btn btn-secondary">👥 Users</a>
+                {% endif %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">📊 Dashboard</a>
+                <a href="{{ url_for('new_bug') }}" class="btn btn-primary">+ Report Bug</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="bug-detail-container">
+            <div class="bug-header">
+                <div>
+                    <h1>Bug #{{ bug.id }}: {{ bug.title }}</h1>
+                    <div class="bug-meta">
+                        <span class="badge badge-{{ bug.priority.lower() }}">{{ bug.priority }}</span>
+                        <span class="badge badge-status-{{ bug.status.lower().replace(' ', '-') }}">{{ bug.status }}</span>
+                        <span>Created by: <strong>{{ bug.creator_email }}</strong></span>
+                        <span>Created: {{ bug.created_at[:16] }}</span>
+                    </div>
+                </div>
+                {% if session.user_role == 'admin' or bug.created_by == session.user_id %}
+                <div style="display: flex; gap: 10px;">
+                    <a href="{{ url_for('edit_bug', bug_id=bug.id) }}" class="btn btn-primary">Edit Bug</a>
+                    <a href="{{ url_for('bug_history', bug_id=bug.id) }}" class="btn btn-secondary">History</a>
+                </div>
+                {% else %}
+                <div>
+                    <a href="{{ url_for('bug_history', bug_id=bug.id) }}" class="btn btn-secondary">History</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Bug Details -->
+            <div class="bug-details">
+                <div class="detail-section">
+                    <h3>Description</h3>
+                    <p>{{ bug.description }}</p>
+                </div>
+
+                {% if bug.steps %}
+                <div class="detail-section">
+                    <h3>Steps to Reproduce</h3>
+                    <p style="white-space: pre-line;">{{ bug.steps }}</p>
+                </div>
+                {% endif %}
+
+                {% if bug.expected_result %}
+                <div class="detail-section">
+                    <h3>Expected Result</h3>
+                    <p style="white-space: pre-line;">{{ bug.expected_result }}</p>
+                </div>
+                {% endif %}
+
+                {% if bug.actual_result %}
+                <div class="detail-section">
+                    <h3>Actual Result</h3>
+                    <p style="white-space: pre-line;">{{ bug.actual_result }}</p>
+                </div>
+                {% endif %}
+
+                {% if bug.screenshot_path or bug.screenshot_url %}
+                <div class="detail-section screenshot-section">
+                    <h3 style="margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.3rem;">📸</span> Visual Evidence
+                    </h3>
+                    <div class="media-gallery">
+                        <div class="media-item" onclick="openImageModal(this.querySelector('img').src)">
+                            <img src="{% if bug.screenshot_path %}{{ url_for('uploaded_file', filename=bug.screenshot_path) }}{% else %}{{ bug.screenshot_url }}{% endif %}" 
+                                 alt="Bug visual evidence" class="bug-screenshot" id="screenshot">
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Image Modal -->
+                <div id="imageModal" class="image-modal">
+                    <span class="modal-close" onclick="closeImageModal()">&times;</span>
+                    <img class="modal-image" id="modalImage">
+                    <div class="modal-caption">Press ESC to close or click outside</div>
+                </div>
+
+                {% if bug.assigned_to %}
+                <div class="detail-section">
+                    <h3>Assigned To</h3>
+                    <p>{{ bug.assignee_email }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Admin Assignment Section -->
+            {% if session.user_role == 'admin' %}
+            <div class="assignment-section">
+                <h3>Assign Bug</h3>
+                <form method="POST" action="{{ url_for('assign_bug', bug_id=bug.id) }}" class="assignment-form">
+                    <div class="form-group">
+                        <label for="assigned_to">Assign to:</label>
+                        <select name="assigned_to" id="assigned_to" class="form-control">
+                            <option value="">Unassigned</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}" {% if bug.assigned_to == user.id %}selected{% endif %}>
+                                    {{ user.email }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Assignment</button>
+                </form>
+
+                <form method="POST" action="{{ url_for('update_status', bug_id=bug.id) }}" class="status-form">
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select name="status" id="status" class="form-control">
+                            <option value="Open" {% if bug.status == 'Open' %}selected{% endif %}>Open</option>
+                            <option value="In Progress" {% if bug.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Fixed" {% if bug.status == 'Fixed' %}selected{% endif %}>Fixed</option>
+                            <option value="Closed" {% if bug.status == 'Closed' %}selected{% endif %}>Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status_note">Note (optional):</label>
+                        <textarea name="status_note" id="status_note" class="form-control" rows="2"
+                                  placeholder="Why this status? add a brief note"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h3>Comments</h3>
+                
+                {% if comments %}
+                    <div class="comments-list">
+                        {% for comment in comments %}
+                            <div class="comment">
+                                <div class="comment-header">
+                                    <strong>{{ comment.user_email }}</strong>
+                                    <span class="comment-date">{{ comment.created_at[:16] }}</span>
+                                </div>
+                                <div class="comment-body">
+                                    {{ comment.comment }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="no-comments">No comments yet. Be the first to comment!</p>
+                {% endif %}
+
+                <!-- Add Comment Form -->
+                <div class="add-comment">
+                    <h4>Add Comment</h4>
+                    <form method="POST" action="{{ url_for('add_comment', bug_id=bug.id) }}">
+                        <textarea name="comment" class="form-control" rows="3" 
+                                  placeholder="Write your comment here..." required></textarea>
+                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = src;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+
+        document.getElementById('imageModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (newTheme === 'dark') {
+                icon.textContent = '☀️';
+                if (text) text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                if (text) text.textContent = 'Dark';
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (currentTheme === 'dark') {
+                icon.textContent = '☀️';
+                if (text) text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                if (text) text.textContent = 'Dark';
+            }
+        });
+    </script>
+</body>
+</html>

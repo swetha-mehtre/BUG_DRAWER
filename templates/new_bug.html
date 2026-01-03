@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report New Bug - Bug Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/light-theme-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme-enhanced.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>Bug Tracker</h2>
+            </div>
+            <div class="nav-items">
+                <span class="user-info">{{ session.user_email }} ({{ session.user_role|title }})</span>                <a href="{{ url_for('profile') }}" class="btn btn-secondary">👤 Profile</a>                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Report New Bug</h1>
+            <p>Provide detailed information about the bug</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <form method="POST" action="{{ url_for('new_bug') }}" class="bug-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Bug Title *</label>
+                    <input type="text" id="title" name="title" class="form-control" required 
+                           placeholder="Brief description of the bug">
+                    <div id="similar-bugs-container" style="margin-top: 10px; display: none;">
+                        <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px;">
+                            <strong style="color: #92400e;">⚠️ Similar Bugs Found:</strong>
+                            <div id="similar-bugs-list" style="margin-top: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" name="description" class="form-control" rows="5" required 
+                              placeholder="Detailed description of what went wrong"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="steps">Steps to Reproduce</label>
+                    <textarea id="steps" name="steps" class="form-control" rows="4" 
+                              placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="expected_result">Expected Result</label>
+                    <textarea id="expected_result" name="expected_result" class="form-control" rows="3" 
+                              placeholder="What should happen? (e.g., 'User should be redirected to the dashboard')"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="actual_result">Actual Result</label>
+                    <textarea id="actual_result" name="actual_result" class="form-control" rows="3" 
+                              placeholder="What actually happened? (e.g., 'Page shows error 404')"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="screenshot_file">Upload Screenshot</label>
+                    <input type="file" id="screenshot_file" name="screenshot_file" class="form-control"
+                           accept=".png,.jpg,.jpeg,.gif,.bmp,.webp">
+                    <small>Supported formats: PNG, JPG, JPEG, GIF, BMP, WEBP (Max 5MB)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="screenshot_url">Or Screenshot URL</label>
+                    <input type="url" id="screenshot_url" name="screenshot_url" class="form-control"
+                           placeholder="https://example.com/screenshot.png">
+                    <small>Alternatively, provide a URL to a screenshot (optional)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority *</label>
+                    <select id="priority" name="priority" class="form-control" required>
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit Bug Report</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Duplicate detection on title input
+        let titleTimeout;
+        document.getElementById('title').addEventListener('input', function(e) {
+            clearTimeout(titleTimeout);
+            const title = e.target.value;
+            
+            if (title.length < 5) {
+                document.getElementById('similar-bugs-container').style.display = 'none';
+                return;
+            }
+            
+            titleTimeout = setTimeout(() => {
+                fetch('/api/check-duplicates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title: title })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.similar_bugs && data.similar_bugs.length > 0) {
+                        const container = document.getElementById('similar-bugs-container');
+                        const list = document.getElementById('similar-bugs-list');
+                        
+                        list.innerHTML = data.similar_bugs.map(bug => `
+                            <div style="margin-top: 6px; padding: 8px; background: white; border-radius: 6px;">
+                                <a href="/bug/${bug.id}" target="_blank" 
+                                   style="color: #6366f1; text-decoration: none; font-weight: 500;">
+                                    Bug #${bug.id}: ${bug.title}
+                                </a>
+                                <span style="margin-left: 8px; font-size: 0.85rem; color: #6b7280;">
+                                    [${bug.status}] [${bug.priority}]
+                                </span>
+                            </div>
+                        `).join('');
+                        
+                        container.style.display = 'block';
+                    } else {
+                        document.getElementById('similar-bugs-container').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking duplicates:', error);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

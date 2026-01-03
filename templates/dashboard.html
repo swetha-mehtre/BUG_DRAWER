@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Bug Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/light-theme-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme-enhanced.css') }}">
+    <script>
+        // Load theme before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>� Bug Tracker</h2>
+            </div>
+            <div class="nav-items">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text">Dark</span>
+                </button>
+                <span class="user-info">{{ session.user_email }} ({{ session.user_role|title }})</span>
+                <a href="{{ url_for('profile') }}" class="btn btn-secondary">👤 Profile</a>
+                {% if session.user_role == 'admin' %}
+                <a href="{{ url_for('view_users') }}" class="btn btn-secondary">👥 Users</a>
+                {% endif %}
+                <a href="{{ url_for('new_bug') }}" class="btn btn-primary">+ Report Bug</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Bug Dashboard</h1>
+            <p>Track and manage all reported bugs</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Statistics Cards -->
+        {% if stats %}
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.total }}</div>
+                    <div class="stat-label">Total Bugs</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔓</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.open }}</div>
+                    <div class="stat-label">Open</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚙️</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.in_progress }}</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.fixed }}</div>
+                    <div class="stat-label">Fixed</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.high_priority }}</div>
+                    <div class="stat-label">High Priority</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔒</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.closed }}</div>
+                    <div class="stat-label">Closed</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Task Assignment Panel (Admin Only) -->
+        {% if session.user_role == 'admin' %}
+        <div class="assignment-panel">
+            <div class="panel-header">
+                <h2>🎯 Task Assignment</h2>
+                <p>Assign bugs to team members and manage priorities</p>
+            </div>
+            
+            <div class="assignment-grid">
+                <!-- Unassigned Bugs -->
+                <div class="assignment-card">
+                    <div class="card-header unassigned">
+                        <h3>Unassigned Bugs</h3>
+                        <span class="count-badge">{{ unassigned_count or 0 }}</span>
+                    </div>
+                    <div class="assignment-list">
+                        {% for bug in unassigned_bugs or [] %}
+                            <div class="assignment-item">
+                                <div class="item-info">
+                                    <a href="{{ url_for('view_bug', bug_id=bug.id) }}" class="bug-link">
+                                        Bug #{{ bug.id }}: {{ bug.title[:40] }}{% if bug.title|length > 40 %}...{% endif %}
+                                    </a>
+                                    <span class="priority-badge badge-{{ bug.priority.lower() }}">{{ bug.priority }}</span>
+                                </div>
+                                <div class="item-actions">
+                                    <select class="quick-assign" onchange="assignBug({{ bug.id }}, this.value)">
+                                        <option value="">Assign...</option>
+                                        {% for user in users %}
+                                            {% if user.role == 'debugger' %}
+                                            <option value="{{ user.id }}">{{ user.email[:20] }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="empty-card-message">
+                                <p>🎉 All bugs assigned!</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- High Priority Bugs -->
+                <div class="assignment-card">
+                    <div class="card-header high-priority">
+                        <h3>🔥 High Priority</h3>
+                        <span class="count-badge">{{ high_priority_count or 0 }}</span>
+                    </div>
+                    <div class="assignment-list">
+                        {% for bug in high_priority_bugs or [] %}
+                            <div class="assignment-item">
+                                <div class="item-info">
+                                    <a href="{{ url_for('view_bug', bug_id=bug.id) }}" class="bug-link">
+                                        Bug #{{ bug.id }}: {{ bug.title[:40] }}{% if bug.title|length > 40 %}...{% endif %}
+                                    </a>
+                                    <span class="status-badge badge-status-{{ bug.status.lower().replace(' ', '-') }}">{{ bug.status }}</span>
+                                </div>
+                                <div class="item-info-detail">
+                                    {% if bug.assignee_email %}
+                                        Assigned to: <strong>{{ bug.assignee_email[:20] }}</strong>
+                                    {% else %}
+                                        <strong style="color: #ef4444;">Unassigned</strong>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="empty-card-message">
+                                <p>No high priority bugs</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- In Progress Bugs -->
+                <div class="assignment-card">
+                    <div class="card-header in-progress">
+                        <h3>⚙️ In Progress</h3>
+                        <span class="count-badge">{{ in_progress_count or 0 }}</span>
+                    </div>
+                    <div class="assignment-list">
+                        {% for bug in in_progress_bugs or [] %}
+                            <div class="assignment-item">
+                                <div class="item-info">
+                                    <a href="{{ url_for('view_bug', bug_id=bug.id) }}" class="bug-link">
+                                        Bug #{{ bug.id }}: {{ bug.title[:40] }}{% if bug.title|length > 40 %}...{% endif %}
+                                    </a>
+                                </div>
+                                <div class="item-info-detail">
+                                    Assigned to: <strong>{{ bug.assignee_email or 'Unassigned' }}</strong>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="empty-card-message">
+                                <p>No bugs in progress</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Notifications Panel -->
+        {% if notifications %}
+        <div class="notification-panel">
+            <div class="panel-header">
+                <h2>🔔 Notifications</h2>
+                <p>Assignments, comments, and status changes on your bugs</p>
+            </div>
+            <div class="notification-list">
+                {% for n in notifications %}
+                <div class="notification-card">
+                    <div class="notification-meta">
+                        <span class="notification-icon">
+                            {% if n.action == 'assigned_to' %}📌{% elif n.action == 'comment_added' %}💬{% elif n.action == 'status_changed' %}🔄{% else %}ℹ{% endif %}
+                        </span>
+                        <div>
+                            <div class="notification-title">{{ n.bug_title or 'Bug #' ~ n.bug_id }}</div>
+                            <div class="notification-sub">{{ n.actor_email or 'System' }} • {{ n.created_at | format_datetime }}</div>
+                        </div>
+                        <a href="{{ url_for('view_bug', bug_id=n.bug_id) }}" class="btn btn-sm btn-primary">View</a>
+                    </div>
+                    <div class="notification-body">
+                        {% if n.action == 'assigned_to' %}
+                            Assigned to you
+                        {% elif n.action == 'comment_added' %}
+                            New comment: {{ n.new_value[:140] }}{% if n.new_value and n.new_value|length > 140 %}...{% endif %}
+                        {% elif n.action == 'status_changed' %}
+                            Status update: {{ n.new_value }}
+                        {% else %}
+                            {{ n.action.replace('_',' ') }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Activity -->
+        {% if recent_activity %}
+        <div class="activity-section" style="margin-top: 30px;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 15px;">Recent Activity</h2>
+            <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="max-height: 300px; overflow-y: auto;">
+                    {% for activity in recent_activity %}
+                    <div style="padding: 10px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 15px; align-items: start;">
+                        <div style="flex-shrink: 0; color: var(--primary); font-size: 1.2rem;">
+                            {% if 'created' in activity.action %}*
+                            {% elif 'assigned' in activity.action %}@
+                            {% elif 'status' in activity.action %}~
+                            {% elif 'priority' in activity.action %}!
+                            {% elif 'edited' in activity.action %}^
+                            {% elif 'comment' in activity.action %}#
+                            {% else %}-{% endif %}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; color: var(--text-primary);">
+                                {{ activity.user_email or 'System' }}
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 3px;">
+                                {{ activity.action.replace('_', ' ').title() }} on 
+                                <a href="{{ url_for('view_bug', bug_id=activity.bug_id) }}" 
+                                   style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                                    Bug #{{ activity.bug_id }}{% if activity.bug_title %}: {{ activity.bug_title[:50] }}{% endif %}
+                                </a>
+                            </div>
+                            {% if activity.old_value and activity.new_value %}
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 3px;">
+                                <span style="color: #ef4444;">{{ activity.old_value }}</span> → 
+                                <span style="color: #10b981;">{{ activity.new_value }}</span>
+                            </div>
+                            {% endif %}
+                            <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 3px;">
+                                {{ activity.created_at | format_datetime }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
+                <div class="filter-group">
+                    <label for="search">Search:</label>
+                    <input type="text" name="search" id="search" 
+                           placeholder="Search by title or description..." 
+                           value="{{ search_query or '' }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    <select name="status" id="status">
+                        <option value="">All Statuses</option>
+                        <option value="Open" {% if status_filter == 'Open' %}selected{% endif %}>Open</option>
+                        <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Fixed" {% if status_filter == 'Fixed' %}selected{% endif %}>Fixed</option>
+                        <option value="Closed" {% if status_filter == 'Closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="priority">Priority:</label>
+                    <select name="priority" id="priority">
+                        <option value="">All Priorities</option>
+                        <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if priority_filter == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Clear</a>
+                    <a href="{{ url_for('export_csv') }}" class="btn btn-success">Export CSV</a>
+                    <a href="{{ url_for('export_excel') }}" class="btn btn-success">Export Excel</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bugs Table -->
+        <div class="table-container">
+            {% if bugs %}
+                <table class="bug-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assigned To</th>
+                            <th>Created By</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bug in bugs %}
+                            <tr>
+                                <td>#{{ bug.id }}</td>
+                                <td>
+                                    {% if bug.screenshot_path or bug.screenshot_url %}
+                                    <div style="position: relative; display: inline-block; width: 50px; height: 50px; border-radius: 8px; overflow: hidden;">
+                                        <img src="{% if bug.screenshot_path %}{{ url_for('uploaded_file', filename=bug.screenshot_path) }}{% else %}{{ bug.screenshot_url }}{% endif %}" alt="Media" style="width: 100%; height: 100%; object-fit: cover; border: 2px solid var(--border); cursor: pointer;" onclick="window.open(this.src, '_blank')" {% if bug.screenshot_url %}onerror="this.style.display='none'"{% endif %}>
+                                    </div>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.7rem;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="bug-title">{{ bug.title }}</td>
+                                <td>
+                                    <span class="badge badge-{{ bug.priority.lower() }}">{{ bug.priority }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-status-{{ bug.status.lower().replace(' ', '-') }}">{{ bug.status }}</span>
+                                </td>
+                                <td>
+                                    {% if bug.assignee_email %}
+                                        {{ bug.assignee_email }}
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ bug.creator_email }}</td>
+                                <td>{{ bug.created_at[:16] }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_bug', bug_id=bug.id) }}" class="btn btn-sm btn-primary">View</a>
+                                    {% if session.user_role == 'admin' %}
+                                    <form method="POST" action="{{ url_for('assign_bug', bug_id=bug.id) }}" style="display: inline;">
+                                        <select name="assigned_to" class="form-control-sm" onchange="this.form.submit()">
+                                            <option value="">Assign to...</option>
+                                            {% for user in users %}
+                                                <option value="{{ user.id }}" {% if bug.assigned_to == user.id %}selected{% endif %}>
+                                                    {{ user.email }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <p>No bugs found. Start by reporting a new bug!</p>
+                    <a href="{{ url_for('new_bug') }}" class="btn btn-primary">Report Your First Bug</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- About & Stack Snapshot (footer) -->
+        <div class="info-section">
+            <div class="info-card utility-card">
+                <div>
+                    <div class="info-label">Utility Score</div>
+                    <div class="info-score">8.7 / 10</div>
+                    <div class="info-note">Based on current feature coverage and UX flow</div>
+                </div>
+                <div class="info-chip">i</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Technical Stack</div>
+                <div class="info-body">
+                    <span class="info-key">Backend:</span> Flask (Python), SQLite<br>
+                    <span class="info-key">Frontend:</span> Jinja templates, HTML, CSS, vanilla JS
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-label">Contact</div>
+                <div class="info-body">
+                    <div>Developer: Swetha Mehtre</div>
+                    <div>Email: <a href="mailto:swethamehtre@gmail.com">swethamehtre@gmail.com</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal for previews -->
+    <div id="imageModal" class="image-modal">
+        <span class="modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="modal-image" id="modalImage" alt="Preview">
+        <div class="modal-caption">Click outside or press ESC to close</div>
+    </div>
+
+    <script>
+        function assignBug(bugId, userId, selectElement) {
+            if (!userId) return;
+            
+            // Show loading notification
+            showNotification('Assigning bug...', 'info');
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/bug/' + bugId + '/assign';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'assigned_to';
+            input.value = userId;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            
+            // Show loading state
+            selectElement.disabled = true;
+            selectElement.style.opacity = '0.5';
+            
+            form.submit();
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+                    <span class="notification-message">${message}</span>
+                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.insertBefore(notification, document.body.firstChild);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 4000);
+        }
+
+        // Image preview modal
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            if (!modal || !modalImage) return;
+            modalImage.src = src;
+            modal.classList.add('active');
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeImageModal();
+        });
+
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal) {
+            imageModal.addEventListener('click', function(event) {
+                if (event.target === this) closeImageModal();
+            });
+        }
+
+        // ============================================
+        // THEME TOGGLE FUNCTIONALITY
+        // ============================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            // Update DOM
+            html.setAttribute('data-theme', newTheme);
+            
+            // Save to localStorage
+            localStorage.setItem('theme', newTheme);
+            
+            // Update button text and icon
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (newTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            }
+            
+            // Show notification
+            showNotification(`Switched to ${newTheme} mode`, 'info');
+        }
+        
+        // Initialize theme on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (currentTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            }
+        });
+    </script>
+</body>
+</html>

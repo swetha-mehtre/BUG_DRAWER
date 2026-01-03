@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Bug Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/light-theme-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme-enhanced.css') }}">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>� Bug Tracker</h2>
+            </div>
+            <div class="nav-items">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text">Dark</span>
+                </button>
+                <span class="user-info">{{ session.user_email }} ({{ session.user_role|title }})</span>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1000px;">
+        <div class="page-header">
+            <h1>👤 My Profile</h1>
+            <p>Manage your account information and settings</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Statistics -->
+        <div class="stats-container" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <div class="stat-icon">�</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ bugs_created }}</div>
+                    <div class="stat-label">Bugs Created</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📌</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ bugs_assigned }}</div>
+                    <div class="stat-label">Bugs Assigned</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ comments_count }}</div>
+                    <div class="stat-label">Comments Posted</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div class="detail-section" style="max-width: 800px; margin: 0 auto;">
+            <h2 style="margin-bottom: 2rem; color: var(--text-primary); font-weight: 800;">
+                Profile Information
+            </h2>
+
+            <form id="profile-form" method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data" style="display: grid; gap: 1.5rem;">
+                
+                <!-- Profile Picture -->
+                <div class="form-group" style="text-align: center; margin-bottom: 2rem;">
+                    <div style="display: inline-block; position: relative;">
+                        {% if user.profile_picture %}
+                        <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
+                             alt="Profile Picture" 
+                             id="profile-preview"
+                             style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid #1677ff; box-shadow: 0 4px 12px rgba(22, 119, 255, 0.3);">
+                        {% else %}
+                        <div id="profile-preview" style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, #1677ff, #0c5cdc); display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white; border: 5px solid #1677ff; box-shadow: 0 4px 12px rgba(22, 119, 255, 0.3);">
+                            {{ user.email[0]|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <label for="profile_picture" class="btn btn-secondary" style="cursor: pointer; display: inline-block;">
+                            📸 Change Photo
+                        </label>
+                        <input type="file" 
+                               id="profile_picture" 
+                               name="profile_picture" 
+                               accept="image/*"
+                               style="display: none;"
+                               onchange="previewImage(this)">
+                        <p style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                            Max 5MB (PNG, JPG, GIF)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="full_name" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                        Full Name
+                    </label>
+                    <input type="text" 
+                           id="full_name" 
+                           name="full_name" 
+                           class="form-control"
+                           value="{{ user.full_name or '' }}"
+                           placeholder="Enter your full name">
+                </div>
+
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                        Username
+                    </label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           class="form-control"
+                           value="{{ user.username or '' }}"
+                           placeholder="Choose a username">
+                </div>
+
+                <!-- Email (Read-only) -->
+                <div class="form-group">
+                    <label for="email" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                        Email Address
+                    </label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="form-control"
+                           value="{{ user.email }}"
+                           readonly
+                           style="background: var(--surface-dark); cursor: not-allowed;">
+                    <p style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                        Email cannot be changed
+                    </p>
+                </div>
+
+                <!-- Contact Number -->
+                <div class="form-group">
+                    <label for="contact_number" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                        Contact Number
+                    </label>
+                    <input type="tel" 
+                           id="contact_number" 
+                           name="contact_number" 
+                           class="form-control"
+                           value="{{ user.contact_number or '' }}"
+                           placeholder="+1 (555) 123-4567">
+                </div>
+
+                <!-- Gemini API Configuration -->
+                <div class="form-group" style="background: linear-gradient(135deg, rgba(22, 119, 255, 0.1), rgba(12, 92, 220, 0.05)); padding: 1.5rem; border-radius: 6px; border: 2px solid #1677ff;">
+                    <h3 style="font-weight: 800; margin-bottom: 1rem; color: #1677ff; display: flex; align-items: center; gap: 0.5rem;">
+                        🎨 Avatar Generation Settings
+                    </h3>
+                    
+                    <!-- Gemini API Key -->
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="gemini_api_key" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Gemini API Key
+                        </label>
+                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                            <input type="password" 
+                                   id="gemini_api_key" 
+                                   name="gemini_api_key" 
+                                   class="form-control"
+                                   value="{{ user.gemini_api_key or '' }}"
+                                   placeholder="Enter your Gemini API key"
+                                   style="flex: 1;">
+                            <a href="https://aistudio.google.com/app/apikey" 
+                               target="_blank" 
+                               class="btn btn-secondary"
+                               style="background: #1677ff; color: white; padding: 0.65rem 1.25rem; border-radius: 6px; text-decoration: none; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                🔑 Get API Key
+                            </a>
+                        </div>
+                        <p style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                            Click the button above to get your free API key from Google AI Studio
+                        </p>
+                    </div>
+
+                    <!-- Hoodie Color with Color Range -->
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="hoodie_color" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Hoodie Color for Avatar
+                        </label>
+                        
+                        <!-- Color Presets -->
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                            <button type="button" onclick="setColor('#FF6B6B')" style="width: 40px; height: 40px; background: #FF6B6B; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Red"></button>
+                            <button type="button" onclick="setColor('#4ECDC4')" style="width: 40px; height: 40px; background: #4ECDC4; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Teal"></button>
+                            <button type="button" onclick="setColor('#95E1D3')" style="width: 40px; height: 40px; background: #95E1D3; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Mint"></button>
+                            <button type="button" onclick="setColor('#F38181')" style="width: 40px; height: 40px; background: #F38181; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Pink"></button>
+                            <button type="button" onclick="setColor('#AA96DA')" style="width: 40px; height: 40px; background: #AA96DA; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Purple"></button>
+                            <button type="button" onclick="setColor('#FCBAD3')" style="width: 40px; height: 40px; background: #FCBAD3; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Rose"></button>
+                            <button type="button" onclick="setColor('#A8E6CF')" style="width: 40px; height: 40px; background: #A8E6CF; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Green"></button>
+                            <button type="button" onclick="setColor('#FFD93D')" style="width: 40px; height: 40px; background: #FFD93D; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Yellow"></button>
+                            <button type="button" onclick="setColor('#6BCB77')" style="width: 40px; height: 40px; background: #6BCB77; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Lime"></button>
+                            <button type="button" onclick="setColor('#4D96FF')" style="width: 40px; height: 40px; background: #4D96FF; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Blue"></button>
+                            <button type="button" onclick="setColor('#FFFFFF')" style="width: 40px; height: 40px; background: #FFFFFF; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="White"></button>
+                            <button type="button" onclick="setColor('#2C3E50')" style="width: 40px; height: 40px; background: #2C3E50; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;" title="Dark"></button>
+                        </div>
+                        
+                        <!-- Manual Color Picker -->
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <div style="flex: 0 0 auto;">
+                                <input type="color" 
+                                       id="hoodie_color" 
+                                       name="hoodie_color" 
+                                       value="{{ user.hoodie_color or '#1677ff' }}"
+                                       style="width: 80px; height: 50px; border: 3px solid var(--border); border-radius: 6px; cursor: pointer;">
+                                <p style="margin-top: 0.25rem; color: var(--text-muted); font-size: 0.75rem; text-align: center;">
+                                    Custom
+                                </p>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: 6px; border: 2px solid var(--border);">
+                                    <span style="font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">Color:</span>
+                                    <span id="color-display" style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem; font-family: monospace;">
+                                        {{ user.hoodie_color or '#1677ff' }}
+                                    </span>
+                                    <div id="color-preview" style="width: 30px; height: 30px; border-radius: 4px; border: 2px solid var(--border); background: {{ user.hoodie_color or '#1677ff' }}; margin-left: auto;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 0.75rem; color: var(--text-muted); font-size: 0.85rem;">
+                            💡 Your name will appear on the hoodie in <strong id="text-color-preview" style="color: white;">white text</strong> (black when hoodie is white)
+                        </p>
+                    </div>
+
+                    <!-- Gender Preference -->
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="gender" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Gender Preference
+                        </label>
+                        <select id="gender" name="gender" class="form-control">
+                            <option value="" {% if not user.gender %}selected{% endif %}>Prefer not to say</option>
+                            <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Female</option>
+                        </select>
+                        <p style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                            This helps create a more personalized avatar
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Account Info -->
+                <div class="form-group" style="background: var(--surface-dark); padding: 1.5rem; border-radius: 6px; border: 2px solid var(--border);">
+                    <h3 style="font-weight: 800; margin-bottom: 1rem; color: var(--text-primary);">
+                        Account Information
+                    </h3>
+                    <div style="display: grid; gap: 0.75rem; font-size: 0.95rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary); font-weight: 600;">Role:</span>
+                            <span style="color: var(--text-primary); font-weight: 700;">{{ user.role|title }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary); font-weight: 600;">Member Since:</span>
+                            <span style="color: var(--text-primary); font-weight: 700;">{{ user.created_at[:10] }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary); font-weight: 600;">User ID:</span>
+                            <span style="color: var(--text-primary); font-weight: 700;">#{{ user.id }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group" style="text-align: center; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem; font-weight: 800;">
+                        💾 Save Profile
+                    </button>
+                </div>
+            </form>
+
+            <!-- Generate Avatar Section -->
+            <div style="margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, rgba(22, 119, 255, 0.08), rgba(12, 92, 220, 0.05)); border-radius: 8px; border: 3px solid #1677ff; text-align: center;">
+                <h3 style="font-weight: 800; color: #1677ff; margin-bottom: 1rem; font-size: 1.5rem;">
+                    ✨ Generate Your Ghibli Avatar
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                    Create a cute, animated Studio Ghibli-style avatar using AI powered by Google Gemini! <br>
+                    <strong>Steps:</strong> <br>
+                    1️⃣ Add your full name above<br>
+                    2️⃣ Upload your photo (optional - for better results)<br>
+                    3️⃣ Get your free Gemini API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #1677ff; font-weight: 700;">Google AI Studio</a><br>
+                    4️⃣ Enter the API key above and click "💾 Save Profile"<br>
+                    5️⃣ Click "🎨 Generate Avatar" below<br>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">💡 Your avatar will be set as your profile picture automatically!</span>
+                </p>
+                <form method="POST" action="{{ url_for('generate_avatar') }}" enctype="multipart/form-data" onsubmit="return confirmGenerate()">
+                    <button type="submit" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #1677ff, #0c5cdc); box-shadow: 0 4px 12px rgba(22, 119, 255, 0.4);">
+                        🎨 Generate Avatar
+                    </button>
+                </form>
+                <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;">
+                    Uses your Gemini API key • Free tier: 15 requests/day
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Profile fields are always editable - no toggle needed
+        window.addEventListener('load', function() {
+            console.log('✓ Profile page loaded - all fields are editable');
+        });
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (newTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            }
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profile-preview');
+                    preview.innerHTML = '';
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Set color from preset buttons
+        function setColor(color) {
+            const colorPicker = document.getElementById('hoodie_color');
+            const colorDisplay = document.getElementById('color-display');
+            const colorPreview = document.getElementById('color-preview');
+            const textColorPreview = document.getElementById('text-color-preview');
+            
+            colorPicker.value = color;
+            colorDisplay.textContent = color.toUpperCase();
+            colorPreview.style.background = color;
+            
+            // Update text color preview based on background
+            if (isLightColor(color)) {
+                textColorPreview.textContent = 'black text';
+                textColorPreview.style.color = 'black';
+            } else {
+                textColorPreview.textContent = 'white text';
+                textColorPreview.style.color = 'white';
+            }
+        }
+
+        // Check if color is light (for text contrast)
+        function isLightColor(color) {
+            // Convert hex to RGB
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Calculate luminance
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.7; // Light colors have high luminance
+        }
+
+        // Update color display when color picker changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorPicker = document.getElementById('hoodie_color');
+            const colorDisplay = document.getElementById('color-display');
+            const colorPreview = document.getElementById('color-preview');
+            const textColorPreview = document.getElementById('text-color-preview');
+            
+            if (colorPicker && colorDisplay) {
+                colorPicker.addEventListener('input', function(e) {
+                    const color = e.target.value;
+                    colorDisplay.textContent = color.toUpperCase();
+                    if (colorPreview) {
+                        colorPreview.style.background = color;
+                    }
+                    
+                    // Update text color preview
+                    if (textColorPreview) {
+                        if (isLightColor(color)) {
+                            textColorPreview.textContent = 'black text';
+                            textColorPreview.style.color = 'black';
+                        } else {
+                            textColorPreview.textContent = 'white text';
+                            textColorPreview.style.color = 'white';
+                        }
+                    }
+                });
+                
+                // Set initial text color
+                const initialColor = colorPicker.value;
+                if (textColorPreview && isLightColor(initialColor)) {
+                    textColorPreview.textContent = 'black text';
+                    textColorPreview.style.color = 'black';
+                }
+            }
+        });
+
+        function confirmGenerate() {
+            const apiKey = document.getElementById('gemini_api_key').value;
+            const fullName = document.getElementById('full_name').value;
+            
+            if (!fullName || fullName.trim() === '') {
+                alert('⚠️ Please enter your full name first!\n\n1. Enter your name in the "Full Name" field above\n2. Click "💾 Save Profile"\n3. Then try generating your avatar again');
+                return false;
+            }
+            
+            if (!apiKey || apiKey.trim() === '') {
+                alert('⚠️ Please add your Gemini API key first!\n\n1. Click "🔑 Get API Key" button to get your free key from Google AI Studio\n2. Copy the API key\n3. Paste it in the "Gemini API Key" field above\n4. Click "💾 Save Profile"\n5. Then try generating your avatar again');
+                return false;
+            }
+            
+            return confirm('🎨 Ready to generate your Ghibli-style avatar!\n\nThis will:\n✓ Create a custom anime-style avatar based on your photo\n✓ Include your name on a ' + document.getElementById('hoodie_color').value + ' colored hoodie\n✓ Use 1 request from your Gemini API quota\n✓ Take 10-30 seconds to generate\n\nContinue?');
+        }
+
+        // Set initial theme icon
+        window.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme') || 'light';
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (theme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            }
+        });
+    </script>
+</body>
+</html>

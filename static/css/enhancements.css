@@ -1,0 +1,312 @@
+/* ============================================
+   UI ENHANCEMENTS - MODERN PROFESSIONAL DESIGN
+   ============================================ */
+
+/* Enhanced Bug Table */
+.bug-table {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15) !important;
+}
+
+.bug-table thead {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #6d28d9 100%) !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.bug-table th {
+    padding: 1.5rem 1.2rem !important;
+    letter-spacing: 1px !important;
+    font-size: 0.9rem !important;
+}
+
+.bug-table tbody tr {
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.1) !important;
+}
+
+.bug-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08)) !important;
+    box-shadow: inset 4px 0 0 #6366f1 !important;
+    transform: translateY(-2px) !important;
+}
+
+.bug-table td {
+    padding: 1.3rem 1.2rem !important;
+}
+
+/* Enhanced Badges */
+.badge {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
+    transition: all 250ms ease !important;
+}
+
+.badge:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+}
+
+/* Better Detail Sections */
+.detail-section {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-hover) 100%) !important;
+    border-radius: 14px !important;
+    padding: 2.2rem !important;
+    margin-bottom: 2rem !important;
+    border: 1px solid var(--border) !important;
+    border-left: 5px solid var(--primary) !important;
+    box-shadow: 0 10px 32px rgba(99, 102, 241, 0.1) !important;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.detail-section:hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 20px 50px rgba(99, 102, 241, 0.18) !important;
+}
+
+.detail-section h3 {
+    color: var(--primary-dark);
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 1.3rem !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Enhanced Comments */
+.comment {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-hover) 100%) !important;
+    border-radius: 12px !important;
+    border-left: 4px solid var(--primary) !important;
+    padding: 1.6rem !important;
+    margin-bottom: 1.4rem !important;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.1) !important;
+    transition: all 300ms ease !important;
+}
+
+.comment:hover {
+    transform: translateX(8px) !important;
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.16) !important;
+}
+
+.comment-date {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: white !important;
+    padding: 0.45rem 1rem !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Enhanced Assignments Section */
+.assignment-section {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-hover) 100%) !important;
+    border-radius: 16px !important;
+    padding: 2.5rem !important;
+    margin-bottom: 2.5rem !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 10px 32px rgba(99, 102, 241, 0.1) !important;
+    transition: all 300ms ease !important;
+}
+
+.assignment-section h3 {
+    color: var(--primary-dark);
+    font-size: 1.3rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Enhanced Form Controls */
+.form-control, select, textarea {
+    border-radius: 10px !important;
+    border: 2px solid var(--border) !important;
+    padding: 0.8rem 1rem !important;
+    font-size: 1rem !important;
+    transition: all 250ms ease !important;
+    background: var(--surface) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control:focus, select:focus, textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    outline: none !important;
+}
+
+/* Better Assignment & Status Forms */
+.assignment-form, .status-form {
+    background: var(--surface-hover) !important;
+    padding: 1.8rem !important;
+    border-radius: 12px !important;
+    margin: 1.5rem 0 !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: inset 0 2px 6px rgba(99, 102, 241, 0.05) !important;
+}
+
+/* Info Cards (footer) */
+.info-card {
+    box-shadow: 0 12px 36px rgba(99, 102, 241, 0.12) !important;
+    border-radius: 16px !important;
+    transition: all 300ms ease !important;
+}
+
+.info-card:hover {
+    transform: translateY(-8px) !important;
+    box-shadow: 0 20px 50px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Enhanced Stats Container */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    border-radius: 14px !important;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12) !important;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px) scale(1.02) !important;
+    box-shadow: 0 16px 40px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Enhanced Notification Panel */
+.notification-panel {
+    border-radius: 14px !important;
+    box-shadow: 0 10px 32px rgba(99, 102, 241, 0.1) !important;
+    overflow: hidden !important;
+}
+
+.notification-card {
+    border-radius: 12px !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08) !important;
+    transition: all 300ms ease !important;
+}
+
+.notification-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Enhanced Buttons with better effects */
+.btn {
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    padding: 0.7rem 1.6rem !important;
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    letter-spacing: 0.5px !important;
+}
+
+.btn-primary {
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3) !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4) !important;
+}
+
+.btn-secondary {
+    transition: all 250ms ease !important;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Enhanced Container Styling */
+.container {
+    border-radius: 0 0 20px 20px;
+}
+
+/* Page header enhancement */
+.page-header {
+    margin-bottom: 3.5rem;
+}
+
+.page-header h1 {
+    font-size: 3.2rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -1px !important;
+}
+
+/* Filter section styling */
+.filter-section {
+    background: var(--surface) !important;
+    border-radius: 14px !important;
+    padding: 2rem !important;
+    margin-bottom: 2.5rem !important;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    align-items: flex-end;
+}
+
+/* Table Container */
+.table-container {
+    background: var(--surface) !important;
+    border-radius: 14px !important;
+    padding: 0 !important;
+    box-shadow: 0 10px 32px rgba(99, 102, 241, 0.1) !important;
+    border: 1px solid var(--border) !important;
+    overflow: auto !important;
+}
+
+/* Dark mode enhancements */
+[data-theme="dark"] .detail-section {
+    box-shadow: 0 10px 32px rgba(99, 102, 241, 0.2) !important;
+}
+
+[data-theme="dark"] .bug-table {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .badge {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Animation enhancements */
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-section, .bug-table, .notification-card {
+    animation: slideInUp 500ms ease-out backwards;
+}
+
+.detail-section:nth-child(1) { animation-delay: 100ms; }
+.detail-section:nth-child(2) { animation-delay: 150ms; }
+.detail-section:nth-child(3) { animation-delay: 200ms; }
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+    .bug-table {
+        font-size: 0.9rem;
+    }
+    
+    .bug-table td {
+        padding: 1rem 0.8rem !important;
+    }
+    
+    .detail-section {
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .comment {
+        padding: 1.2rem !important;
+    }
+}

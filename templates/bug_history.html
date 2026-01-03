@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug #{{ bug.id }} History - Bug Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/light-theme-enhanced.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme-enhanced.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>Bug Tracker</h2>
+            </div>
+            <div class="nav-items">
+                <span class="user-info">{{ session.user_email }} ({{ session.user_role|title }})</span>
+                <a href="{{ url_for('profile') }}" class="btn btn-secondary">👤 Profile</a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Dashboard</a>
+                <a href="{{ url_for('view_bug', bug_id=bug.id) }}" class="btn btn-secondary">Back to Bug</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>History: Bug #{{ bug.id }}</h1>
+            <p>{{ bug.title }}</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            {% if history %}
+                <div style="position: relative;">
+                    <!-- Timeline line -->
+                    <div style="position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: var(--border);"></div>
+                    
+                    {% for record in history %}
+                    <div style="position: relative; padding: 20px 0 20px 60px; margin-bottom: 15px;">
+                        <!-- Timeline dot -->
+                        <div style="position: absolute; left: 12px; top: 25px; width: 18px; height: 18px; 
+                                    background: var(--primary); border: 3px solid white; border-radius: 50%; 
+                                    box-shadow: 0 0 0 2px var(--primary);"></div>
+                        
+                        <div style="background: #f9fafb; border-radius: 10px; padding: 15px; border-left: 3px solid var(--primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 5px;">
+                                        {% if 'created' in record.action %}
+                                            * Bug Created
+                                        {% elif 'assigned' in record.action %}
+                                            @ Bug Assigned
+                                        {% elif 'status' in record.action %}
+                                            ~ Status Changed
+                                        {% elif 'priority' in record.action %}
+                                            ! Priority Changed
+                                        {% elif 'edited' in record.action %}
+                                            ^ Bug Edited
+                                        {% elif 'comment' in record.action %}
+                                            # Comment Added
+                                        {% elif 'title' in record.action %}
+                                            * Title Changed
+                                        {% elif 'description' in record.action %}
+                                            + Description Updated
+                                        {% else %}
+                                            - {{ record.action.replace('_', ' ').title() }}
+                                        {% endif %}
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                        by <strong>{{ record.user_email or 'System' }}</strong>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    {{ record.created_at | format_datetime }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if record.old_value or record.new_value %}
+                            <div style="margin-top: 12px; padding: 10px; background: white; border-radius: 6px;">
+                                {% if record.old_value %}
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">From:</span>
+                                    <span style="padding: 3px 8px; background: #fee2e2; color: #991b1b; 
+                                                 border-radius: 4px; font-size: 0.9rem; margin-left: 8px;">
+                                        {{ record.old_value }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if record.new_value %}
+                                <div>
+                                    <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">To:</span>
+                                    <span style="padding: 3px 8px; background: #d1fae5; color: #065f46; 
+                                                 border-radius: 4px; font-size: 0.9rem; margin-left: 8px;">
+                                        {{ record.new_value }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if record.action in ['comment_added', 'status_changed'] and record.new_value %}
+                            <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
+                                {% if record.action == 'comment_added' %}
+                                    <div style="font-weight: 600; margin-bottom: 6px;">Comment</div>
+                                    <div style="white-space: pre-wrap; color: var(--text-secondary);">{{ record.new_value }}</div>
+                                {% elif record.action == 'status_changed' %}
+                                    <div style="font-weight: 600; margin-bottom: 6px;">Status Note</div>
+                                    <div style="white-space: pre-wrap; color: var(--text-secondary);">{{ record.new_value }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">-</div>
+                    <p>No history available for this bug yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<script>
+    // ============================================
+    // THEME TOGGLE FUNCTIONALITY
+    // ============================================
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        
+        if (newTheme === 'dark') {
+            icon.textContent = '☀️';
+            if (text) text.textContent = 'Light';
+        } else {
+            icon.textContent = '🌙';
+            if (text) text.textContent = 'Dark';
+        }
+        
+        // Show notification if function exists
+        if (typeof showNotification === 'function') {
+            showNotification(`Switched to ${newTheme} mode`, 'info');
+        }
+    }
+    
+    // Initialize theme on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        
+        if (currentTheme === 'dark') {
+            icon.textContent = '☀️';
+            if (text) text.textContent = 'Light';
+        } else {
+            icon.textContent = '🌙';
+            if (text) text.textContent = 'Dark';
+        }
+    });
+</script>

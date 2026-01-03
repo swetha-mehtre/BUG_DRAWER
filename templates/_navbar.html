@@ -1,0 +1,20 @@
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <h2>� Bug Tracker</h2>
+        </div>
+        <div class="nav-items">
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-text">Dark</span>
+            </button>
+            <span class="user-info">{{ session.user_email }} ({{ session.user_role|title }})</span>
+            {% if session.user_role == 'admin' %}
+            <a href="{{ url_for('view_users') }}" class="btn btn-secondary">👥 Users</a>
+            {% endif %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">📊 Dashboard</a>
+            <a href="{{ url_for('new_bug') }}" class="btn btn-primary">+ Report Bug</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+        </div>
+    </div>
+</nav>
